@@ -31,6 +31,7 @@ const Mobile = () => {
     gamma: null,
   });
   const socketRef = useRef();
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     socketRef.current = io("https://10.0.1.4:1234", {
@@ -43,10 +44,24 @@ const Mobile = () => {
     socketRef.current.emit("mobileToServer", "im mobile");
   }, []);
 
+  const throttle = (callback, limit = 1000 / 120) => {
+    let waiting = false;
+    return function () {
+      if (!waiting) {
+        callback.apply(this, arguments);
+        waiting = true;
+        setTimeout(() => {
+          waiting = false;
+        }, limit);
+      }
+    };
+  };
+
   const handleOrientation = (event) => {
     const { absolute, alpha, beta, gamma } = event;
     const data = { absolute, alpha, beta, gamma };
     setOrientation(data);
+    setCount((v) => v + 1);
     socketRef.current.emit("mobileToServer", data);
   };
 
@@ -54,7 +69,11 @@ const Mobile = () => {
     DeviceMotionEvent.requestPermission().then((response) => {
       if (response == "granted") {
         setControl((v) => !v);
-        window.addEventListener("deviceorientation", handleOrientation, true);
+        window.addEventListener(
+          "deviceorientation",
+          throttle(handleOrientation),
+          true
+        );
       }
     });
   };
@@ -77,6 +96,7 @@ const Mobile = () => {
       ) : (
         <div>
           <ul>
+            <li>count: {count}</li>
             <li>ɑ:{orientation.alpha}</li>
             <li>β:{orientation.beta}</li>
             <li>γ:{orientation.gamma}</li>

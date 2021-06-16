@@ -23,6 +23,7 @@ const Button = styled.div`
 `;
 
 const Mobile = () => {
+  const [playerId, setPlayerId] = useState(undefined);
   const [control, setControl] = useState(false);
   const [orientation, setOrientation] = useState({
     absolute: false,
@@ -38,9 +39,10 @@ const Mobile = () => {
       secure: true,
     });
 
-    socketRef.current.on("serverToMobile", (arg) => {
-      //
+    socketRef.current.on("playerId", (arg) => {
+      setPlayerId(arg);
     });
+
     socketRef.current.emit("mobileToServer", "im mobile");
   }, []);
 
@@ -62,7 +64,7 @@ const Mobile = () => {
     const data = { absolute, alpha, beta, gamma };
     setOrientation(data);
     setCount((v) => v + 1);
-    socketRef.current.emit("mobileToServer", data);
+    socketRef.current.emit("mobileControl", data);
   };
 
   const getAccel = () => {
@@ -96,6 +98,7 @@ const Mobile = () => {
       ) : (
         <div>
           <ul>
+            <li>playerId: {playerId}</li>
             <li>count: {count}</li>
             <li>ɑ:{orientation.alpha}</li>
             <li>β:{orientation.beta}</li>
